@@ -13,8 +13,9 @@
         <entry key="app/src/main/res/layout/activity_login2.xml" value="0.4" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.4" />
         <entry key="app/src/main/res/layout/activity_main_menu.xml" value="0.4" />
-        <entry key="app/src/main/res/layout/activity_measure.xml" value="0.1" />
-        <entry key="app/src/main/res/layout/dialog_save.xml" value="0.10729166666666666" />
+        <entry key="app/src/main/res/layout/activity_measure.xml" value="0.2" />
+        <entry key="app/src/main/res/layout/activity_search.xml" value="0.176" />
+        <entry key="app/src/main/res/layout/dialog_save.xml" value="0.152" />
       </map>
     </option>
   </component>

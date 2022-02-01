@@ -8,6 +8,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
@@ -18,6 +19,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,6 +38,7 @@ import com.google.ar.sceneform.ux.TransformableNode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class MeasureActivity extends AppCompatActivity {
 
@@ -43,7 +47,7 @@ public class MeasureActivity extends AppCompatActivity {
     private ModelRenderable andyRenderable;
     private AnchorNode myanchornode;
     private DecimalFormat form_numbers = new DecimalFormat("#0.00 m");
-
+    private Set<String> myset;
     private Anchor anchor1 = null, anchor2 = null;
 
     private HitResult hit;
@@ -54,9 +58,10 @@ public class MeasureActivity extends AppCompatActivity {
 
     List<AnchorNode> anchorNodes = new ArrayList<>();
     private boolean measure_height = false;
-    private ArrayList<String> arl_saved = new ArrayList<String>();
     private float fl_measurement = 0.0f;
     private String message;
+    private RadioButton selectedButton;
+    private String name = "Height";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,13 +190,41 @@ public class MeasureActivity extends AppCompatActivity {
         View mView = getLayoutInflater().inflate(R.layout.dialog_save, null);
 
         EditText et_measure = (EditText) mView.findViewById(R.id.et_measure);
+        RadioGroup radioGroup = (RadioGroup) mView.findViewById(R.id.radioGroup);
         mBuilder.setTitle("Measurement title");
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                if(i==R.id.heightButton){
+                    Log.e("error","height");
+                }else if(i==R.id.widthButton){
+                    Log.e("error","width");
+
+                }
+                selectedButton = radioGroup.findViewById(i);
+              name=  selectedButton.getText().toString();
+            }
+        });
 
         mBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                if(et_measure.length() != 0){
-                    arl_saved.add(et_measure.getText()+": "+form_numbers.format(fl_measurement));
+                if(et_measure.getText().toString().length() != 0){
+                    SharedPreferences sharedPref = getSharedPreferences("myKey",MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    int selectedRadioButtonId = radioGroup.getCheckedRadioButtonId();
+//                    Log.d("radioid","this is radio group button"+selectedRadioButtonId);
+//                   Log.e("error",name);
+                    if(name.equals("Width")){
+                        editor.putString("width", et_measure.getText().toString()+":"+form_numbers.format(fl_measurement));
+                        editor.commit();
+//                        Log.d("width",sharedPref.getString("width",""));
+                    }
+                    if(name.equals("Height")) {
+                        editor.putString("height", et_measure.getText().toString()+":"+form_numbers.format(fl_measurement));
+                        editor.commit();
+//                        Log.d("height",sharedPref.getString("height",""));
+                    }
                     dialogInterface.dismiss();
                 }
                 else
