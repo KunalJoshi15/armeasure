@@ -44,11 +44,11 @@ public class MeasureActivity extends AppCompatActivity {
 
     private float seekbarlength = 0f;
     private ArFragment arFragment;
-    private ModelRenderable andyRenderable;
+    private ModelRenderable model_renderable;
     private AnchorNode myanchornode;
     private DecimalFormat form_numbers = new DecimalFormat("#0.00 m");
     private Set<String> myset;
-    private Anchor anchor1 = null, anchor2 = null;
+    private Anchor a1 = null, a2 = null;
 
     private HitResult hit;
 
@@ -58,7 +58,7 @@ public class MeasureActivity extends AppCompatActivity {
 
     List<AnchorNode> anchorNodes = new ArrayList<>();
     private boolean measure_height = false;
-    private float fl_measurement = 0.0f;
+    private float measurement = 0.0f;
     private String message;
     private RadioButton selectedButton;
     private String name = "Height";
@@ -81,7 +81,7 @@ public class MeasureActivity extends AppCompatActivity {
             public void onClick(View view) {
                 resetLayout();
                 measure_height = false;
-                text.setText("Click the extremes you want to measure");
+                text.setText("Place objects in two anchornodes for width");
             }
         });
 
@@ -90,14 +90,14 @@ public class MeasureActivity extends AppCompatActivity {
             public void onClick(View view) {
                 resetLayout();
                 measure_height = true;
-                text.setText("Click the base of the object you want to measure");
+                text.setText("Use seek bar for finding height.");
             }
         });
 
         btn_save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(fl_measurement != 0.0f)
+                if(measurement != 0.0f)
                     saveDialog();
                 else
                     Toast.makeText(MeasureActivity.this, "Make a measurement before saving", Toast.LENGTH_SHORT).show();
@@ -108,8 +108,8 @@ public class MeasureActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 seekbarlength = progress;
-                fl_measurement = progress/100f;
-                text.setText("Height: "+form_numbers.format(fl_measurement));
+                measurement = progress/100f;
+                text.setText("Height: "+form_numbers.format(measurement));
                 myanchornode.setLocalScale(new Vector3(1f, progress/10f, 1f));
             }
 
@@ -125,11 +125,11 @@ public class MeasureActivity extends AppCompatActivity {
         ModelRenderable.builder()
                 .setSource(this, R.raw.cube)
                 .build()
-                .thenAccept(renderable -> andyRenderable = renderable)
+                .thenAccept(renderable -> model_renderable = renderable)
                 .exceptionally(
                         throwable -> {
                             Toast toast =
-                                    Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG);
+                                    Toast.makeText(this, "Unable to load model_renderable", Toast.LENGTH_LONG);
                             toast.setGravity(Gravity.CENTER, 0, 0);
                             toast.show();
                             return null;
@@ -137,7 +137,7 @@ public class MeasureActivity extends AppCompatActivity {
 
         arFragment.setOnTapArPlaneListener(
                 (HitResult hitResult, Plane plane, MotionEvent motionEvent) -> {
-                    if (andyRenderable == null) {
+                    if (model_renderable == null) {
                         return;
                     }
                     hit = hitResult;
@@ -147,21 +147,20 @@ public class MeasureActivity extends AppCompatActivity {
                     anchorNode.setParent(arFragment.getArSceneView().getScene());
 
                     if(!measure_height) {
-                        if(anchor2 != null){
+                        if(a2 != null){
                             deleteAnchors();
                         }
-                        if (anchor1 == null) {
-                            anchor1 = anchor;
+                        if (a1 == null) {
+                            a1 = anchor;
                         } else {
-                            anchor2 = anchor;
-                            fl_measurement = getMetersBetweenAnchors(anchor1, anchor2);
-                            text.setText("Width: " +
-                                    form_numbers.format(fl_measurement));
+                            a2 = anchor;
+                            measurement = getDistanceBetweenAnchors(a1, a2);
+                            text.setText("Width: " + form_numbers.format(measurement));
                         }
                     }
                     else{
                         deleteAnchors();
-                        anchor1 = anchor;
+                        a1 = anchor;
                         text.setText("Move the slider till the cube reaches the upper base");
                         sk.setEnabled(true);
                     }
@@ -170,13 +169,13 @@ public class MeasureActivity extends AppCompatActivity {
                     anchorNodes.add(anchorNode);
                     TransformableNode a = new TransformableNode(arFragment.getTransformationSystem());
                     a.setParent(anchorNode);
-                    a.setRenderable(andyRenderable);
+                    a.setRenderable(model_renderable);
                     a.select();
                     a.getScaleController().setEnabled(false);
                 });
     }
 
-    private float getMetersBetweenAnchors(Anchor anchor1, Anchor anchor2) {
+    private float getDistanceBetweenAnchors(Anchor anchor1, Anchor anchor2) {
         float[] distance_vector = anchor1.getPose().inverse()
                 .compose(anchor2.getPose()).getTranslation();
         float totalDistanceSquared = 0;
@@ -216,12 +215,12 @@ public class MeasureActivity extends AppCompatActivity {
 //                    Log.d("radioid","this is radio group button"+selectedRadioButtonId);
 //                   Log.e("error",name);
                     if(name.equals("Width")){
-                        editor.putString("width", et_measure.getText().toString()+":"+form_numbers.format(fl_measurement));
+                        editor.putString("width", et_measure.getText().toString()+":"+form_numbers.format(measurement));
                         editor.commit();
 //                        Log.d("width",sharedPref.getString("width",""));
                     }
                     if(name.equals("Height")) {
-                        editor.putString("height", et_measure.getText().toString()+":"+form_numbers.format(fl_measurement));
+                        editor.putString("height", et_measure.getText().toString()+":"+form_numbers.format(measurement));
                         editor.commit();
 //                        Log.d("height",sharedPref.getString("height",""));
                     }
@@ -246,8 +245,8 @@ public class MeasureActivity extends AppCompatActivity {
     }
 
     private void deleteAnchors(){
-        anchor1 = null;
-        anchor2 = null;
+        a1 = null;
+        a2 = null;
         for (AnchorNode n : anchorNodes) {
             arFragment.getArSceneView().getScene().removeChild(n);
             n.getAnchor().detach();
